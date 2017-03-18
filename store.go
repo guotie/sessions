@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 )
 
@@ -77,7 +78,7 @@ type CookieStore struct {
 // It returns a new session and an error if the session exists but could
 // not be decoded.
 func (s *CookieStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r).Get(s, name)
+	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
 }
 
 // New returns a session for the given name without adding it to the registry.
@@ -180,7 +181,7 @@ func (s *FilesystemStore) MaxLength(l int) {
 //
 // See CookieStore.Get().
 func (s *FilesystemStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r).Get(s, name)
+	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
 }
 
 // New returns a session for the given name without adding it to the registry.

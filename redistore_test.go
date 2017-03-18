@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/guotie/gin"
 )
 
 const redisAddr = "10.10.188.10:6379"
@@ -97,8 +99,11 @@ func TestRediStore(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	rsp = NewRedisRecorder()
+	c := gin.Context{
+		Request: req,
+	}
 	// Get a session.
-	if session, err = store.Get(req, "session-key"); err != nil {
+	if session, err = store.Get(c.Request, "session-key"); err != nil {
 		t.Fatalf("Error getting session: %v", err)
 	}
 	// Get a flash.

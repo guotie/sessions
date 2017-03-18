@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/gin-gonic/gin"
 	"github.com/gorilla/securecookie"
 )
 
@@ -37,13 +38,7 @@ type JSONSerializer struct{}
 // Serialize to JSON. Will err if there are unmarshalable key values
 func (s JSONSerializer) Serialize(ss *Session) ([]byte, error) {
 	m := make(map[string]interface{}, len(ss.Values))
-	for k, v := range ss.Values {
-		ks, ok := k.(string)
-		if !ok {
-			err := fmt.Errorf("Non-string key value, cannot serialize session to JSON: %v", k)
-			fmt.Printf("redistore.JSONSerializer.serialize() Error: %v", err)
-			return nil, err
-		}
+	for ks, v := range ss.Values {
 		m[ks] = v
 	}
 	return json.Marshal(m)
@@ -225,7 +220,7 @@ func (s *RediStore) Close() error {
 //
 // See gorilla/sessions FilesystemStore.Get().
 func (s *RediStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r).Get(s, name)
+	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
 }
 
 // New returns a session for the given name without adding it to the registry.

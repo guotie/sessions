@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/gorilla/context"
+	"github.com/gin-gonic/gin"
 )
 
 // Default flashes key.
@@ -37,7 +37,7 @@ type Options struct {
 // NewSession is called by session stores to create a new session instance.
 func NewSession(store Store, name string) *Session {
 	return &Session{
-		Values: make(map[interface{}]interface{}),
+		Values: make(map[string]interface{}),
 		store:  store,
 		name:   name,
 	}
@@ -49,7 +49,7 @@ type Session struct {
 	// user data.
 	ID string
 	// Values contains the user-data for the session.
-	Values  map[interface{}]interface{}
+	Values  map[string]interface{}
 	Options *Options
 	IsNew   bool
 	store   Store
@@ -115,23 +115,20 @@ type sessionInfo struct {
 	e error
 }
 
-// contextKey is the type used to store the registry in the context.
-type contextKey int
-
 // registryKey is the key used to store the registry in the context.
-const registryKey contextKey = 0
+const registryKey = "registryKey"
 
 // GetRegistry returns a registry instance for the current request.
-func GetRegistry(r *http.Request) *Registry {
-	registry := context.Get(r, registryKey)
-	if registry != nil {
+func GetRegistry(c *gin.Context) *Registry {
+	if registry, ok := c.Get(registryKey); ok {
 		return registry.(*Registry)
 	}
 	newRegistry := &Registry{
-		request:  r,
+		request:  c.Request,
 		sessions: make(map[string]sessionInfo),
 	}
-	context.Set(r, registryKey, newRegistry)
+
+	c.Set(registryKey, newRegistry)
 	return newRegistry
 }
 
@@ -186,7 +183,7 @@ func init() {
 
 // Save saves all sessions used during the current request.
 func Save(r *http.Request, w http.ResponseWriter) error {
-	return GetRegistry(r).Save(w)
+	return GetRegistry(r.Context().(*gin.Context)).Save(w)
 }
 
 // NewCookie returns an http.Cookie with the options set. It also sets
