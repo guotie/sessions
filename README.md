@@ -32,6 +32,8 @@ Let's start with an example that shows the sessions API in a nutshell:
 	)
 
 	var store = sessions.NewCookieStore([]byte("something-very-secret"))
+	
+	rediStore, err := NewRediStore(10, "tcp", ":6379", "", []byte("secret-key"))
 
 	func MyHandler(c *gin.Context) {
 		// Get a session. We're ignoring the error resulted from decoding an
