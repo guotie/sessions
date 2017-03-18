@@ -219,8 +219,8 @@ func (s *RediStore) Close() error {
 // Get returns a session for the given name after adding it to the registry.
 //
 // See gorilla/sessions FilesystemStore.Get().
-func (s *RediStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
+func (s *RediStore) Get(c *gin.Context, name string) (*Session, error) {
+	return Get(s, c, name)
 }
 
 // New returns a session for the given name without adding it to the registry.
@@ -247,7 +247,7 @@ func (s *RediStore) New(r *http.Request, name string) (*Session, error) {
 }
 
 // Save adds a single session to the response.
-func (s *RediStore) Save(r *http.Request, w http.ResponseWriter, session *Session) error {
+func (s *RediStore) Save(w http.ResponseWriter, session *Session) error {
 	// Marked for deletion.
 	if session.Options.MaxAge < 0 {
 		if err := s.delete(session); err != nil {

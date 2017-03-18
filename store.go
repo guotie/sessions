@@ -22,7 +22,7 @@ import (
 // See CookieStore and FilesystemStore for examples.
 type Store interface {
 	// Get should return a cached session.
-	Get(r *http.Request, name string) (*Session, error)
+	Get(c *gin.Context, name string) (*Session, error)
 
 	// New should create and return a new session.
 	//
@@ -31,7 +31,8 @@ type Store interface {
 	New(r *http.Request, name string) (*Session, error)
 
 	// Save should persist session to the underlying store implementation.
-	Save(r *http.Request, w http.ResponseWriter, s *Session) error
+	//Save(r *http.Request, w http.ResponseWriter, s *Session) error
+	Save(w http.ResponseWriter, s *Session) error
 }
 
 // CookieStore ----------------------------------------------------------------
@@ -77,8 +78,8 @@ type CookieStore struct {
 //
 // It returns a new session and an error if the session exists but could
 // not be decoded.
-func (s *CookieStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
+func (s *CookieStore) Get(c *gin.Context, name string) (*Session, error) {
+	return Get(s, c, name)
 }
 
 // New returns a session for the given name without adding it to the registry.
@@ -103,8 +104,7 @@ func (s *CookieStore) New(r *http.Request, name string) (*Session, error) {
 }
 
 // Save adds a single session to the response.
-func (s *CookieStore) Save(r *http.Request, w http.ResponseWriter,
-	session *Session) error {
+func (s *CookieStore) Save(w http.ResponseWriter, session *Session) error {
 	encoded, err := securecookie.EncodeMulti(session.Name(), session.Values,
 		s.Codecs...)
 	if err != nil {
@@ -180,8 +180,8 @@ func (s *FilesystemStore) MaxLength(l int) {
 // Get returns a session for the given name after adding it to the registry.
 //
 // See CookieStore.Get().
-func (s *FilesystemStore) Get(r *http.Request, name string) (*Session, error) {
-	return GetRegistry(r.Context().(*gin.Context)).Get(s, name)
+func (s *FilesystemStore) Get(c *gin.Context, name string) (*Session, error) {
+	return Get(s, c, name)
 }
 
 // New returns a session for the given name without adding it to the registry.
@@ -211,8 +211,7 @@ func (s *FilesystemStore) New(r *http.Request, name string) (*Session, error) {
 // deleted from the store path. With this process it enforces the properly
 // session cookie handling so no need to trust in the cookie management in the
 // web browser.
-func (s *FilesystemStore) Save(r *http.Request, w http.ResponseWriter,
-	session *Session) error {
+func (s *FilesystemStore) Save(w http.ResponseWriter, session *Session) error {
 	// Delete if max-age is <= 0
 	if session.Options.MaxAge <= 0 {
 		if err := s.erase(session); err != nil {

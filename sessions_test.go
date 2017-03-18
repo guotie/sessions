@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gin-gonic/gin"
 )
 
 // NewRecorder returns an initialized ResponseRecorder.
@@ -48,7 +50,10 @@ func TestFlashes(t *testing.T) {
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	rsp = NewRecorder()
 	// Get a session.
-	if session, err = store.Get(req, "session-key"); err != nil {
+	c := &gin.Context{
+		Request: req,
+	}
+	if session, err = store.Get(c, "session-key"); err != nil {
 		t.Fatalf("Error getting session: %v", err)
 	}
 	// Get a flash.
@@ -62,7 +67,7 @@ func TestFlashes(t *testing.T) {
 	// Custom key.
 	session.AddFlash("baz", "custom_key")
 	// Save.
-	if err = Save(req, rsp); err != nil {
+	if err = Save(c, rsp); err != nil {
 		t.Fatalf("Error saving session: %v", err)
 	}
 	hdr = rsp.Header()
@@ -71,7 +76,7 @@ func TestFlashes(t *testing.T) {
 		t.Fatal("No cookies. Header:", hdr)
 	}
 
-	if _, err = store.Get(req, "session:key"); err.Error() != "sessions: invalid character in cookie name: session:key" {
+	if _, err = store.Get(c, "session:key"); err.Error() != "sessions: invalid character in cookie name: session:key" {
 		t.Fatalf("Expected error due to invalid cookie name")
 	}
 
@@ -80,8 +85,11 @@ func TestFlashes(t *testing.T) {
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	req.Header.Add("Cookie", cookies[0])
 	rsp = NewRecorder()
+	c = &gin.Context{
+		Request: req,
+	}
 	// Get a session.
-	if session, err = store.Get(req, "session-key"); err != nil {
+	if session, err = store.Get(c, "session-key"); err != nil {
 		t.Fatalf("Error getting session: %v", err)
 	}
 	// Check all saved values.
@@ -113,8 +121,11 @@ func TestFlashes(t *testing.T) {
 
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	rsp = NewRecorder()
+	c = &gin.Context{
+		Request: req,
+	}
 	// Get a session.
-	if session, err = store.Get(req, "session-key"); err != nil {
+	if session, err = store.Get(c, "session-key"); err != nil {
 		t.Fatalf("Error getting session: %v", err)
 	}
 	// Get a flash.
@@ -125,7 +136,7 @@ func TestFlashes(t *testing.T) {
 	// Add some flashes.
 	session.AddFlash(&FlashMessage{42, "foo"})
 	// Save.
-	if err = Save(req, rsp); err != nil {
+	if err = Save(c, rsp); err != nil {
 		t.Fatalf("Error saving session: %v", err)
 	}
 	hdr = rsp.Header()
@@ -140,8 +151,11 @@ func TestFlashes(t *testing.T) {
 	req, _ = http.NewRequest("GET", "http://localhost:8080/", nil)
 	req.Header.Add("Cookie", cookies[0])
 	rsp = NewRecorder()
+	c = &gin.Context{
+		Request: req,
+	}
 	// Get a session.
-	if session, err = store.Get(req, "session-key"); err != nil {
+	if session, err = store.Get(c, "session-key"); err != nil {
 		t.Fatalf("Error getting session: %v", err)
 	}
 	// Check all saved values.

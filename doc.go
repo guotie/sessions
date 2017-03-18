@@ -23,15 +23,17 @@ Let's start with an example that shows the sessions API in a nutshell:
 
 	import (
 		"net/http"
+
 		"github.com/gorilla/sessions"
+		"github.com/gin-gonic/gin"
 	)
 
 	var store = sessions.NewCookieStore([]byte("something-very-secret"))
 
-	func MyHandler(w http.ResponseWriter, r *http.Request) {
+	func MyHandler(c *gin.context) {
 		// Get a session. We're ignoring the error resulted from decoding an
 		// existing session: Get() always returns a session, even if empty.
-		session, err := store.Get(r, "session-name")
+		session, err := store.Get(c, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -41,7 +43,7 @@ Let's start with an example that shows the sessions API in a nutshell:
 		session.Values["foo"] = "bar"
 		session.Values[42] = 43
 		// Save it before we write to the response/return from the handler.
-		session.Save(r, w)
+		session.Save(c, w)
 	}
 
 First we initialize a session store calling NewCookieStore() and passing a
@@ -72,9 +74,9 @@ Ruby On Rails a few years back. When we request a flash message, it is removed
 from the session. To add a flash, call session.AddFlash(), and to get all
 flashes, call session.Flashes(). Here is an example:
 
-	func MyHandler(w http.ResponseWriter, r *http.Request) {
+	func MyHandler(c *gin.Context) {
 		// Get a session.
-		session, err := store.Get(r, "session-name")
+		session, err := store.Get(c, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -126,8 +128,8 @@ then allow us to serialise/deserialise values of those types to and from our ses
 Note that because session values are stored in a map[string]interface{}, there's
 a need to type-assert data when retrieving it. We'll use the Person struct we registered above:
 
-	func MyHandler(w http.ResponseWriter, r *http.Request) {
-		session, err := store.Get(r, "session-name")
+	func MyHandler(c *gin.Context) {
+		session, err := store.Get(c, "session-name")
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -182,15 +184,15 @@ at once: it's sessions.Save(). Here's an example:
 
 	var store = sessions.NewCookieStore([]byte("something-very-secret"))
 
-	func MyHandler(w http.ResponseWriter, r *http.Request) {
+	func MyHandler(c *gin.Context) {
 		// Get a session and set a value.
-		session1, _ := store.Get(r, "session-one")
+		session1, _ := store.Get(c, "session-one")
 		session1.Values["foo"] = "bar"
 		// Get another session and set another value.
-		session2, _ := store.Get(r, "session-two")
+		session2, _ := store.Get(c, "session-two")
 		session2.Values[42] = 43
 		// Save all sessions.
-		sessions.Save(r, w)
+		sessions.Save(c, w)
 	}
 
 This is possible because when we call Get() from a session store, it adds the
